@@ -25,7 +25,7 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Get a single user by _id
+// Get a single user by id
 app.get('/users/:id', (req, res) => {
   const userId = req.params.id;
   User.findById(userId)
@@ -52,7 +52,7 @@ app.post('/users', (req, res) => {
     });
 });
 
-// Update a user by _id
+// Update a user by id
 app.put('/users/:id', (req, res) => {
   const userId = req.params.id;
   const updatedData = req.body;
@@ -66,7 +66,7 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
-// Delete a user by _id
+// Delete a user by id
 app.delete('/users/:id', (req, res) => {
   const userId = req.params.id;
   User.findByIdAndDelete(userId)
@@ -82,6 +82,11 @@ app.delete('/users/:id', (req, res) => {
     });
 });
 
+
+
+
+
+
 // Get all thoughts
 app.get('/thoughts', async (req, res) => {
   try {
@@ -93,20 +98,27 @@ app.get('/thoughts', async (req, res) => {
   }
 });
 
-// Get single thought
+// Get single thought by id
+// Get single thought by id
 app.get('/thoughts/:id', async (req, res) => {
   try {
-    const thought = await Thought.findById(req.params.id)
-      .populate('thoughts friends');
+    const thoughtId = req.params.id;
+    const thought = await Thought.findById(thoughtId)
+      .populate('reactions')
+      .exec(); 
+
     if (!thought) {
-      return res.status(404).json({ message: 'thought not found' });
+      return res.status(404).json({ message: 'Thought not found' });
     }
-    res.json(thought);
+
+    res.status(200).json(thought);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+
 
 
 // Post new thought
@@ -143,6 +155,7 @@ app.put('/thoughts/:id', async (req, res) => {
   }
 });
 
+// Deletes thoughts by id
 app.delete('/thoughts/:thoughtId', async (req, res) => {
   const thoughtId = req.params.thoughtId;
 
@@ -161,43 +174,57 @@ app.delete('/thoughts/:thoughtId', async (req, res) => {
 });
 
 
-app.post('/api/thoughts/:thoughtId/reactions', (req, res) => {
-const thoughtId = req.params.thoughtId;
-const reactionData = req.body;
 
-// Create a new reaction
-Thought.findByIdAndUpdate(
-  thoughtId,
-  { $push: { reactions: reactionData } },
-  { new: true },
-  (err, updatedThought) => {
-    if (err) {
-      res.status(500).json(err);
-    } else {
-      res.status(200).json(updatedThought);
+
+
+
+// Create reaction
+app.post('/thoughts/:thoughtId/reactions', async (req, res) => {
+  const thoughtId = req.params.thoughtId;
+  const reactionData = req.body;
+
+  try {
+    const updatedThought = await Thought.findByIdAndUpdate(
+      thoughtId,
+      { $push: { reactions: reactionData } },
+      { new: true }
+    );
+
+    if (!updatedThought) {
+      return res.status(404).json({ message: 'Thought not found' });
     }
+
+    res.status(201).json(updatedThought);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
   }
-);
 });
 
-app.delete('/api/thoughts/:thoughtId/reactions/:reactionId', (req, res) => {
-const thoughtId = req.params.thoughtId;
-const reactionId = req.params.reactionId;
 
-// Remove the reaction by reactionId
-Thought.findByIdAndUpdate(
-  thoughtId,
-  { $pull: { reactions: { reactionId: reactionId } } },
-  { new: true },
-  (err, updatedThought) => {
-    if (err) {
-      res.status(500).json(err);
-    } else {
-      res.status(200).json(updatedThought);
+// Delete a reaction from a thought
+app.delete('/thoughts/:thoughtId/reactions/:reactionId', async (req, res) => {
+  const thoughtId = req.params.thoughtId;
+  const reactionId = req.params.reactionId;
+
+  try {
+    const updatedThought = await Thought.findByIdAndUpdate(
+      thoughtId,
+      { $pull: { reactions: { _id: reactionId } } },
+      { new: true }
+    );
+
+    if (!updatedThought) {
+      return res.status(404).json({ message: 'Thought not found' });
     }
+
+    res.status(200).json({ message: 'Reaction deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
   }
-);
 });
+
 
 db.once('open', () => {
   app.listen(PORT, () => {
