@@ -193,27 +193,32 @@ app.post("/thoughts/:thoughtId/reactions", async (req, res) => {
 });
 
 // Delete a reaction from a thought
+// Delete a reaction from a thought
 app.delete("/thoughts/:thoughtId/reactions/:reactionId", async (req, res) => {
   const thoughtId = req.params.thoughtId;
   const reactionId = req.params.reactionId;
 
   try {
-    const updatedThought = await Thought.findByIdAndUpdate(
-      thoughtId,
-      { $pull: { reactions: { _id: reactionId } } },
-      { new: true }
-    );
+    // Find the thought by ID
+    const thought = await Thought.findById(thoughtId);
 
-    if (!updatedThought) {
+    if (!thought) {
       return res.status(404).json({ message: "Thought not found" });
     }
 
-    res.status(200).json({ message: "Reaction deleted" });
+    // Remove the reaction by ID from the thought's reactions array
+    thought.reactions.pull(reactionId);
+
+    // Save the updated thought
+    const updatedThought = await thought.save();
+
+    res.status(200).json({ message: "Reaction deleted", thought: updatedThought });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 
 
