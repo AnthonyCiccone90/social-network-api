@@ -17,4 +17,8 @@ This is a basic social network API that shows common functionality similar to po
 <a href="https://github.com/AnthonyCiccone90/social-network-api">Click here</a>
 <hr>
 
+
+## Depedencies Used
+![Alt text](<Screenshot 2023-11-05 at 14.03.28.png>)
+
 User story provided by University of Denver FSF bootcamp
