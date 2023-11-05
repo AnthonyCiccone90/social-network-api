@@ -19,8 +19,13 @@ const thoughtSchema = new Schema({
       ref: 'User',
       required: true,
     },
-    reactions: [{ type: Schema.Types.ObjectId, ref: 'Reaction' }],
-});
+    reactions: [
+      {
+        reactionText: String,
+        username: String,
+      }
+    ],
+  });
   
 const Thought = mongoose.model('Thought', thoughtSchema);
 
