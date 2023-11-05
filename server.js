@@ -1,8 +1,8 @@
-const express = require('express');
-const { MongoClient } = require('mongodb');
-const db = require('./config/connection');
-const User = require('./models/User');
-const Thought = require('./models/Thought');
+const express = require("express");
+const { MongoClient } = require("mongodb");
+const db = require("./config/connection");
+const User = require("./models/User");
+const Thought = require("./models/Thought");
 
 const app = express();
 const PORT = 3001;
@@ -15,33 +15,38 @@ app.use(express.json());
 const client = new MongoClient(connectionStringURI);
 
 // Get all users
-app.get('/users', async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
-    const users = await User.find().populate('thoughts friends');
+    const users = await User.find().populate("thoughts friends");
     res.json(users);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
 // Get a single user by id
-app.get('/users/:id', (req, res) => {
-  const userId = req.params.id;
-  User.findById(userId)
-    .populate('thoughts')
-    .populate('friends')
-    .exec((err, user) => {
-      if (err) {
-        res.status(500).json(err);
-      } else {
-        res.status(200).json(user);
-      }
-    });
+app.get("/users/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId)
+      .populate("thoughts")
+      .populate("friends")
+      .exec();
+
+    if (!user) {
+      return res.status(404).json({ message: "Thought not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 // Create a new user
-app.post('/users', (req, res) => {
+app.post("/users", (req, res) => {
   const userData = req.body;
   User.customCreate(userData)
     .then((newUser) => {
@@ -53,11 +58,11 @@ app.post('/users', (req, res) => {
 });
 
 // Update a user by id
-app.put('/users/:id', (req, res) => {
+app.put("/users/:id", (req, res) => {
   const userId = req.params.id;
   const updatedData = req.body;
 
-  User.findByIdAndUpdate(userId, updatedData, { new: true }) // Returns a promise
+  User.findByIdAndUpdate(userId, updatedData, { new: true }) 
     .then((updatedUser) => {
       res.status(200).json(updatedUser);
     })
@@ -67,14 +72,14 @@ app.put('/users/:id', (req, res) => {
 });
 
 // Delete a user by id
-app.delete('/users/:id', (req, res) => {
+app.delete("/users/:id", (req, res) => {
   const userId = req.params.id;
   User.findByIdAndDelete(userId)
     .then((result) => {
       if (!result) {
-        res.status(404).json({ message: 'User not found' });
+        res.status(404).json({ message: "User not found" });
       } else {
-        res.json({ message: 'User deleted' });
+        res.json({ message: "User deleted" });
       }
     })
     .catch((err) => {
@@ -82,58 +87,49 @@ app.delete('/users/:id', (req, res) => {
     });
 });
 
-
-
-
-
-
 // Get all thoughts
-app.get('/thoughts', async (req, res) => {
+app.get("/thoughts", async (req, res) => {
   try {
-    const thoughts = await Thought.find().populate('reactions');
+    const thoughts = await Thought.find().populate("reactions");
     res.json(thoughts);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
 // Get single thought by id
-// Get single thought by id
-app.get('/thoughts/:id', async (req, res) => {
+app.get("/thoughts/:id", async (req, res) => {
   try {
     const thoughtId = req.params.id;
     const thought = await Thought.findById(thoughtId)
-      .populate('reactions')
-      .exec(); 
+      .populate("reactions")
+      .exec();
 
     if (!thought) {
-      return res.status(404).json({ message: 'Thought not found' });
+      return res.status(404).json({ message: "Thought not found" });
     }
 
     res.status(200).json(thought);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
-
-
-
 // Post new thought
-app.post('/thoughts', async (req, res) => {
+app.post("/thoughts", async (req, res) => {
   try {
     const newThought = await Thought.create(req.body);
     res.status(201).json(newThought);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: 'Invalid request' });
+    res.status(400).json({ message: "Invalid request" });
   }
 });
 
 // Updates thought by id
-app.put('/thoughts/:id', async (req, res) => {
+app.put("/thoughts/:id", async (req, res) => {
   try {
     const thoughtId = req.params.id;
     const updatedThoughtData = req.body;
@@ -145,41 +141,36 @@ app.put('/thoughts/:id', async (req, res) => {
     );
 
     if (!updatedThought) {
-      return res.status(404).json({ message: 'Thought not found' });
+      return res.status(404).json({ message: "Thought not found" });
     }
 
     res.status(200).json(updatedThought);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
 // Deletes thoughts by id
-app.delete('/thoughts/:thoughtId', async (req, res) => {
+app.delete("/thoughts/:thoughtId", async (req, res) => {
   const thoughtId = req.params.thoughtId;
 
   try {
     const deletedThought = await Thought.findByIdAndDelete(thoughtId);
 
     if (!deletedThought) {
-      return res.status(404).json({ message: 'Thought not found' });
+      return res.status(404).json({ message: "Thought not found" });
     }
 
-    res.status(200).json({ message: 'Thought deleted' });
+    res.status(200).json({ message: "Thought deleted" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
-
-
-
-
-
 // Create reaction
-app.post('/thoughts/:thoughtId/reactions', async (req, res) => {
+app.post("/thoughts/:thoughtId/reactions", async (req, res) => {
   const thoughtId = req.params.thoughtId;
   const reactionData = req.body;
 
@@ -191,19 +182,18 @@ app.post('/thoughts/:thoughtId/reactions', async (req, res) => {
     );
 
     if (!updatedThought) {
-      return res.status(404).json({ message: 'Thought not found' });
+      return res.status(404).json({ message: "Thought not found" });
     }
 
     res.status(201).json(updatedThought);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
-
 // Delete a reaction from a thought
-app.delete('/thoughts/:thoughtId/reactions/:reactionId', async (req, res) => {
+app.delete("/thoughts/:thoughtId/reactions/:reactionId", async (req, res) => {
   const thoughtId = req.params.thoughtId;
   const reactionId = req.params.reactionId;
 
@@ -215,18 +205,17 @@ app.delete('/thoughts/:thoughtId/reactions/:reactionId', async (req, res) => {
     );
 
     if (!updatedThought) {
-      return res.status(404).json({ message: 'Thought not found' });
+      return res.status(404).json({ message: "Thought not found" });
     }
 
-    res.status(200).json({ message: 'Reaction deleted' });
+    res.status(200).json({ message: "Reaction deleted" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
-
-db.once('open', () => {
+db.once("open", () => {
   app.listen(PORT, () => {
     console.log(`API server running on port ${PORT}!`);
   });
