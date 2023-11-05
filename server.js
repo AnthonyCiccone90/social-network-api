@@ -215,6 +215,90 @@ app.delete("/thoughts/:thoughtId/reactions/:reactionId", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+// Add a friend to a user's friend list
+app.post("/users/:userId/friends/:friendId", async (req, res) => {
+  const userId = req.params.userId;
+  const friendId = req.params.friendId;
+
+  if (!mongoose.Types.ObjectId.isValid(friendId)) {
+    return res.status(400).json({ message: "Invalid friend ID" });
+  }
+
+  try {
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $push: { friends: friendId } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Remove a friend from a user's friend list
+app.delete("/users/:userId/friends/:friendId", async (req, res) => {
+  const userId = req.params.userId;
+  const friendId = req.params.friendId;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { friends: friendId } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 db.once("open", () => {
   app.listen(PORT, () => {
     console.log(`API server running on port ${PORT}!`);
